@@ -1,0 +1,142 @@
+diff --git a/node_modules/prismarine-registry/README.md b/node_modules/prismarine-registry/README.md
+index 4f6433d..4d2b853 100644
+--- a/node_modules/prismarine-registry/README.md
++++ b/node_modules/prismarine-registry/README.md
+@@ -47,24 +47,46 @@ Mapping to dimension data object containing dimension `name`, `minY` and `height
+ 
+ #### loadItemStates / writeItemStates
+ 
+-* loads/writes data from an item states array inside the bedrock start game packet.
++* loads/writes data from an item states array inside the bedrock start game and/or item registry packet.
+ 
+ ```js
+-// In a client
++// Client < 1.21.70
+ const { createClient } = require('bedrock-protocol');
+-const registry = require('prismarine-registry')('bedrock_1.19.50');
++const registry = require('prismarine-registry')('bedrock_1.21.0');
++const client = createClient({
++  'host': '127.0.0.1'
++})
++client.on('start_game', ({block_network_ids_are_hashes, itemstates }) => {
++  registry.handleStartGame({block_network_ids_are_hashes, itemstates});
++})
+ 
++// Client >= 1.21.70
++const { createClient } = require('bedrock-protocol');
++const registry = require('prismarine-registry')('bedrock_1.21.90');
+ const client = createClient({
+   'host': '127.0.0.1'
+ })
++client.on('start_game', (params) => {
++  registry.handleStartGame(params);
++})
++client.on('item_registry', ({ itemstates }) => {
++  registry.handleItemRegistry(itemstates);
++})
++```
+ 
+-client.on('start_game', ({ itemstates }) => {
+-  registry.loadItemStates(itemstates);
++```js
++// Server < 1.21.70
++server.on('connect', (client) => {
++  const block_network_ids_are_hashes: boolean = false;
++  const itemstates = registry.writeItemStates()
++  client.write('start_game', { ...startGamePacket, block_network_ids_are_hashes, itemstates });
+ })
+ 
+-// In a server
++// Server >= 1.21.70
+ server.on('connect', (client) => {
++  const block_network_ids_are_hashes: boolean = false;
++  client.write('start_game', { ...startGamePacket, block_network_ids_are_hashes });
+   const itemstates = registry.writeItemStates()
+-  client.write('start_game', { ...startGamePacket, itemstates })
++  client.write('item_registry', { itemstates });
+ })
+ ```
+\ No newline at end of file
+diff --git a/node_modules/prismarine-registry/lib/bedrock/index.js b/node_modules/prismarine-registry/lib/bedrock/index.js
+index 8cb3970..b80db89 100644
+--- a/node_modules/prismarine-registry/lib/bedrock/index.js
++++ b/node_modules/prismarine-registry/lib/bedrock/index.js
+@@ -3,9 +3,15 @@ const buildIndexFromArray = require('../indexer')
+ module.exports = (data) => {
+   function loadItemStates (itemStates) {
+     const items = []
+-    for (const item of itemStates) {
+-      const name = item.name.replace('minecraft:', '')
+-      items.push({ ...data.itemsByName[name], name, id: item.runtime_id })
++    for (const itemState of itemStates) {
++      const name = itemState.name.replace('minecraft:', '')
++      items.push({
++        ...data.itemsByName[name],
++        name,
++        id: itemState.runtime_id,
++        nbt: itemState.nbt,
++        version: itemState.version
++      })
+     }
+     data.itemsArray = items
+     data.items = buildIndexFromArray(data.itemsArray, 'id')
+@@ -29,7 +35,10 @@ module.exports = (data) => {
+ 
+   return {
+     handleStartGame (packet) {
+-      loadItemStates(packet.itemstates)
++      if (packet.itemstates != null) {
++        loadItemStates(packet.itemstates)
++      }
++
+       if (this.supportFeature('blockHashes') && packet.block_network_ids_are_hashes) {
+         loadHashedRuntimeIds(this)
+       } else {
+@@ -37,6 +46,12 @@ module.exports = (data) => {
+       }
+     },
+ 
++    handleItemRegistry (packet) {
++      if (packet.itemstates) {
++        loadItemStates(packet.itemstates)
++      }
++    },
++
+     writeItemStates () {
+       const itemstates = []
+       for (const item of data.itemsArray) {
+@@ -47,7 +62,21 @@ module.exports = (data) => {
+           ns = 'minecraft'
+         }
+ 
+-        itemstates.push({ name: `${ns}:${name}`, runtime_id: item.id, component_based: ns !== 'minecraft' })
++        const itemState = {
++          name: `${ns}:${name}`,
++          runtime_id: item.id,
++          component_based: ns !== 'minecraft'
++        }
++
++        if (item.version !== undefined) {
++          itemState.version = item.version
++        }
++
++        if (item.nbt !== undefined) {
++          itemState.nbt = item.nbt
++        }
++
++        itemstates.push(itemState)
+       }
+ 
+       return itemstates
+diff --git a/node_modules/prismarine-registry/lib/index.d.ts b/node_modules/prismarine-registry/lib/index.d.ts
+index d413b20..943c6f2 100644
+--- a/node_modules/prismarine-registry/lib/index.d.ts
++++ b/node_modules/prismarine-registry/lib/index.d.ts
+@@ -10,6 +10,7 @@ declare namespace loader {
+   
+   export interface RegistryBedrock extends IndexedData {
+     handleStartGame(packet: any): void;
++    handleItemRegistry(packet: any): void;
+     writeItemStates(): ItemState[];
+   }
+   

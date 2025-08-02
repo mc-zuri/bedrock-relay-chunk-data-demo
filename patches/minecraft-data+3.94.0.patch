@@ -1,0 +1,12 @@
+diff --git a/node_modules/minecraft-data/index.d.ts b/node_modules/minecraft-data/index.d.ts
+index 55b10ad..0110a5e 100644
+--- a/node_modules/minecraft-data/index.d.ts
++++ b/node_modules/minecraft-data/index.d.ts
+@@ -1503,6 +1503,7 @@ declare namespace MinecraftData {
+     blocks: { [id: number]: IndexedBlock }
+     blocksByName: { [name: string]: IndexedBlock }
+     blocksByStateId: { [id: number]: IndexedBlock }
++    blocksByRuntimeId: { [id: number]: IndexedBlock }
+     blocksArray: IndexedBlock[]
+     blockMappings: {
+       pc: { name: string, states: Record<string, string | number> },
