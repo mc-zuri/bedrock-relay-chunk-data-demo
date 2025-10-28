@@ -265,7 +265,7 @@ export class NetworkWorldProvider {
 
     async on_update_block(packet: any) {
         const chunk = this.world.getColumnAt(packet.position);
-        const newBlock = this.registry.blocksByStateId[packet.block_runtime_id];
+        const newBlock = this.registry.blocksByRuntimeId[packet.block_runtime_id];
         if (chunk) {
             chunk.setBlock(packet.position, {
                 ...(newBlock as any),
