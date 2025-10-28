@@ -1,19 +1,19 @@
 {
     "type": "module",
     "scripts": {
-        "start": "node --experimental-strip-types --disable-warning=ExperimentalWarning src/main.ts",
+        "start-client": "node --experimental-strip-types --disable-warning=ExperimentalWarning src/client-main.ts",
         "postinstall": "patch-package"
     },
     "dependencies": {
-        "bedrock-protocol": "3.47.0",
-        "minecraft-data": "3.94.0",
+        "bedrock-protocol": "3.49.0",
+        "minecraft-data": "3.99.1",
         "prismarine-chunk": "1.39.0",
         "prismarine-registry": "1.11.0",
         "prismarine-world": "^3.6.3",
-        "patch-package": "^8.0.0"
+        "patch-package": "^8.0.1"
     },
     "devDependencies": {
-        "@types/node": "^24.1.0",
-        "typescript": "^5.9.2"
+        "@types/node": "^24.9.2",
+        "typescript": "^5.9.3"
     }
 }
