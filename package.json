@@ -1,16 +1,27 @@
 {
     "type": "module",
     "scripts": {
-        "start-client": "node --experimental-strip-types --disable-warning=ExperimentalWarning src/client-main.ts",
+        "start": "node --experimental-strip-types --disable-warning=ExperimentalWarning src/main.ts",
         "postinstall": "patch-package"
     },
     "dependencies": {
+        "@types/compression": "^1.8.1",
+        "@types/express": "^5.0.5",
         "bedrock-protocol": "3.49.0",
-        "minecraft-data": "3.99.1",
+        "canvas": "^3.2.0",
+        "compression": "^1.8.1",
+        "csbinary": "^2.1.4",
+        "express": "^5.1.0",
+        "minecraft-assets": "1.17.0",
+        "minecraft-data": "3.100.0",
+        "patch-package": "^8.0.1",
         "prismarine-chunk": "1.39.0",
+        "prismarine-entity": "2.5.0",
         "prismarine-registry": "1.11.0",
+        "prismarine-viewer": "github:mc-zuri/prismarine-viewer#feature/crash-fix",
         "prismarine-world": "^3.6.3",
-        "patch-package": "^8.0.1"
+        "socket.io": "^4.8.1",
+        "vec3": "^0.1.10"
     },
     "devDependencies": {
         "@types/node": "^24.9.2",

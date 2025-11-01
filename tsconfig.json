@@ -6,6 +6,15 @@
      "rewriteRelativeImportExtensions": true,
      "erasableSyntaxOnly": true,
      "verbatimModuleSyntax": true,
-     "strict": true
+     "strict": true,
+     "noImplicitThis": true,
+     "strictBindCallApply": true,
+     "strictNullChecks": true,
+     "strictBuiltinIteratorReturn": true,
+     "strictFunctionTypes": true,
+     "strictPropertyInitialization": true,
+     "alwaysStrict": true,
+     "noFallthroughCasesInSwitch": true,
+     "noUncheckedIndexedAccess": true
   }
 } 

@@ -69,9 +69,18 @@ index 35cd853..a65ff11 100644
        return
      }
 diff --git a/node_modules/prismarine-chunk/src/bedrock/1.3/SubChunk.js b/node_modules/prismarine-chunk/src/bedrock/1.3/SubChunk.js
-index 52b233e..2a27f98 100644
+index 52b233e..4d3ceda 100644
 --- a/node_modules/prismarine-chunk/src/bedrock/1.3/SubChunk.js
 +++ b/node_modules/prismarine-chunk/src/bedrock/1.3/SubChunk.js
+@@ -36,7 +36,7 @@ class SubChunk {
+     subChunk.blocks.push(new PalettedStorage(1))
+     subChunk.palette.push([])
+     // Set zero to be air, Add to the palette
+-    subChunk.addToPalette(0, subChunk.registry.blocksByName.air.defaultState, 4096)
++    subChunk.addToPalette(0, subChunk.registry.blocksByName.air.runtime_id ?? subChunk.registry.blocksByName.air.defaultState, 4096)
+     return subChunk
+   }
+ 
 @@ -56,7 +56,7 @@ class SubChunk {
        case 9:
          storageCount = stream.readByte()
@@ -90,6 +99,24 @@ index 52b233e..2a27f98 100644
      }
      for (let l = 0; l < this.blocks.length; l++) {
        if (compact) this.compact(l) // Compact before encoding
+@@ -234,7 +234,7 @@ class SubChunk {
+   getBlockStateId (l = 0, x, y, z) {
+     const blocks = this.blocks[l]
+     if (!blocks) {
+-      return this.registry.blocksByName.air.defaultState
++      return this.registry.blocksByName.air.runtime_id ?? this.registry.blocksByName.air.defaultState
+     }
+     return this.palette[l][blocks.get(x, y, z)].stateId
+   }
+@@ -243,7 +243,7 @@ class SubChunk {
+     if (!this.palette[l]) {
+       this.palette[l] = []
+       this.blocks[l] = new PalettedStorage(4) // Zero initialized
+-      this.addToPalette(l, this.registry.blocksByName.air.defaultState, 4096 - 1)
++      this.addToPalette(l, this.registry.blocksByName.air.runtime_id ?? this.registry.blocksByName.air.defaultState, 4096 - 1)
+       this.addToPalette(l, stateId, 1)
+       this.blocks[l].set(x, y, z, this.palette[l].length - 1)
+     } else {
 @@ -271,7 +271,7 @@ class SubChunk {
    }
  
@@ -99,6 +126,19 @@ index 52b233e..2a27f98 100644
      this.palette[l].push({ stateId, name: block.name, states: block.states, count })
      const minBits = neededBits(this.palette[l].length - 1)
      if (minBits > this.blocks[l].bitsPerBlock) {
+diff --git a/node_modules/prismarine-chunk/src/bedrock/common/CommonChunkColumn.js b/node_modules/prismarine-chunk/src/bedrock/common/CommonChunkColumn.js
+index 4084d74..74e4728 100644
+--- a/node_modules/prismarine-chunk/src/bedrock/common/CommonChunkColumn.js
++++ b/node_modules/prismarine-chunk/src/bedrock/common/CommonChunkColumn.js
+@@ -45,7 +45,7 @@ class CommonChunkColumn {
+   getBlock (vec4, full = true) {
+     const Y = vec4.y >> 4
+     const sec = this.sections[this.co + Y]
+-    if (!sec) return this.Block.fromStateId(this.registry.blocksByName.air.defaultState, 0)
++    if (!sec) return this.Block.fromStateId(this.registry.blocksByName.air.runtime_id ?? this.registry.blocksByName.air.defaultState, 0)
+     const block = sec.getBlock(vec4.l, vec4.x, vec4.y & 0xf, vec4.z, this.getBiomeId(vec4))
+     if (full) {
+       block.light = sec.blockLight.get(vec4.x, vec4.y & 0xf, vec4.z)
 diff --git a/node_modules/prismarine-chunk/src/bedrock/common/Stream.js b/node_modules/prismarine-chunk/src/bedrock/common/Stream.js
 index 92e34e2..901114b 100644
 --- a/node_modules/prismarine-chunk/src/bedrock/common/Stream.js
